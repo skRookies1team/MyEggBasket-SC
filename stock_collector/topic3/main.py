@@ -1,6 +1,7 @@
 import os
 import asyncio
 import json
+import requests
 from datetime import datetime
 from kis_ws_client import KisWSClient
 from kafka_client import KafkaConsumerClient, KafkaProducerClient
@@ -15,6 +16,8 @@ except Exception:
 
 # 환경변수 로드
 KAFKA_BROKER = os.getenv("KAFKA_BROKER", os.getenv("KAFKA_BOOTSTRAP_SERVERS", "localhost:19092"))
+# Spring Boot API 주소 (환경에 맞게 수정 필요)
+API_BASE_URL = os.getenv("API_BASE_URL", "http://localhost:8081")
 
 # [계정 1] 관리자용 (고정 50개 담당)
 APP_KEY_1 = os.getenv("APP_KEY") or os.getenv("KIS_APP_KEY")
@@ -76,6 +79,24 @@ def handle_tick(data, producer):
         print(f"Error processing data: {e}")
 
 
+# [추가] API에서 초기 구독 목록 가져오기
+def fetch_active_stocks_from_api():
+    url = f"{API_BASE_URL}/api/app/subscriptions/active-codes"
+    try:
+        print(f"📡 Fetching active subscriptions from {url}...")
+        response = requests.get(url, timeout=5)
+        if response.status_code == 200:
+            stock_list = response.json()
+            print(f"✅ Loaded {len(stock_list)} active stocks from API.")
+            return stock_list
+        else:
+            print(f"⚠️ Failed to load stocks. Status: {response.status_code}, Body: {response.text}")
+            return []
+    except Exception as e:
+        print(f"⚠️ API Connection failed: {e}")
+        return []
+
+
 # -----------------------------------------------------------------------------
 # Main Loop
 # -----------------------------------------------------------------------------
@@ -121,6 +142,17 @@ async def main():
     if fixed_list:
         print(f"🔒 [Admin] Subscribing fixed list ({len(fixed_list)} stocks)...")
         await client_admin.subscribe_list(fixed_list)
+
+    # 4. [계정 B] API에서 가져온 활성 종목 구독 (초기화)
+    active_stocks = fetch_active_stocks_from_api()
+    if active_stocks:
+        # 매니저에 등록하고 구독할 리스트 받기 (고정 종목 제외됨)
+        init_list = sub_manager.init_from_api(active_stocks)
+        if init_list:
+            print(f"🔓 [User] Subscribing initial list ({len(init_list)} stocks)...")
+            await client_user.subscribe_list(init_list)
+    else:
+        print("🔓 [User] No active subscriptions found or API failed.")
 
     print("✅ Stock Collector Started (Dual Client Mode)")
 

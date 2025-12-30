@@ -13,6 +13,25 @@ class SubscriptionManager:
         self.viewing_stocks = deque(maxlen=30)  # 조회용 (FIFO), 최대 30개
         self.user_account_stocks = set()  # 실제 웹소켓에 요청할 합집합
 
+    def init_from_api(self, stock_list):
+        """API에서 받아온 초기 구독 목록으로 상태 초기화"""
+        for code in stock_list:
+            if not code: continue
+
+            # 고정 종목은 제외 (Account 1 담당)
+            if code in self.fixed_stocks:
+                continue
+
+            # Account 2가 담당할 종목들 Viewing 큐에 추가 (최대 30개까지)
+            if code not in self.viewing_stocks:
+                self.viewing_stocks.append(code)
+
+        # 내부 집합 갱신
+        self._refresh_user_account_list()
+
+        # 구독해야 할 리스트 반환
+        return list(self.user_account_stocks)
+
     def update_interest_stocks(self, stock_list):
         """관심 종목 업데이트 (최대 20개 유지 가정)"""
         # 리스트가 들어오면 앞 20개만 취함
