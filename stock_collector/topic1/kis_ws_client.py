@@ -122,13 +122,13 @@ class KISWebSocketClient:
             if tr_id == self.TR_TICK:
                 tick = {
                     "type": "STOCK_TICK",
-                    "MKSC_SHRN_ISCD": fields[0], # 종목 코드
-                    "STCK_CNTG_HOUR": fields[1], # 체결 시간
-                    "STCK_PRPR": int(fields[2]), # 현재가
-                    "PRDY_VRSS": int(fields[4]), # 전일 대비
-                    "PRDY_CTRT": float(fields[5]), # 전일 대비율
-                    "ACML_VOL": int(fields[15]), # 누적 거래량
-                    "ACML_TR_PBMN": int(fields[16]), # 누적 거래 대금
+                    "stckShrnIscd": fields[0], # 종목 코드
+                    "stckCntgHour": fields[1], # 체결 시간
+                    "stckPrpr": int(fields[2]), # 현재가
+                    "prdyVrss": int(fields[4]), # 전일 대비
+                    "prdyCtrt": float(fields[5]), # 전일 대비율
+                    "acmlVol": int(fields[15]), # 누적 거래량
+                    "acmlTrPbmn": int(fields[16]), # 누적 거래 대금
                 }
                 self.on_message(tick)
 
