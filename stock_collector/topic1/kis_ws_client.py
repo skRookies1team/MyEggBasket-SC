@@ -155,8 +155,7 @@ class KISWebSocketClient:
 
                 order_book = {
                     "type": "ORDER_BOOK",
-                    "code": symbol,
-                    "time": fields[1],
+                    "stckShrnIscd": fields[0], # 종목 코드
                     "asks": asks,
                     "bids": bids,
                     "totalAskQty": int(float(fields[43])),
