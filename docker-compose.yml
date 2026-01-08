@@ -1,0 +1,41 @@
+version: '3.8'
+services:
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    hostname: kafka
+    container_name: kafka
+    ports:
+      - "19092:19092" # 외부(호스트) 통신용 포트
+    environment:
+      # KRaft 모드 설정
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:29093'
+
+      # 리스너 설정
+      KAFKA_LISTENERS: 'PLAINTEXT://kafka:9092,CONTROLLER://kafka:29093,EXTERNAL://0.0.0.0:19092'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka:9092,EXTERNAL://localhost:19092'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+
+      # 데이터 저장 경로 및 초기 클러스터 ID (고정값 사용)
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk' # 임의의 Base64 ID (초기화용)
+
+    volumes:
+      - ./kafka_data:/var/lib/kafka/data
+
+  kafka-ui:
+      image: provectuslabs/kafka-ui:latest
+      container_name: kafka-ui
+      ports:
+        - "8090:8080"
+      environment:
+        KAFKA_CLUSTERS_0_NAME: local
+        KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092 # 도커 내부 통신이므로 9092 사용
+      depends_on:
+        - kafka

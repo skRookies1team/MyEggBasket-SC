@@ -7,3 +7,4 @@ GROUP_ID = "stock-collector"
 # KIS
 KIS_WS_URL = "ws://ops.koreainvestment.com:21000/tryitout/websocket"
 KIS_TR_ID = "H0STCNT0"
+
